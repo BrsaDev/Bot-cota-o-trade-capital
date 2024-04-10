@@ -1,0 +1,61 @@
+html, body {
+    padding: 0 !important;
+    margin: 0 !important;
+    height: 100vh !important;
+    overflow: hidden !important;
+    width: 100% !important;
+}
+body {
+    min-height: 100vh;
+    font-family: calibri;
+    background-color: #55a576;
+}
+.body {
+    /* background-image: radial-gradient(at top right, #fff 60%, #55a576 30%); */
+    background-image: radial-gradient(at top right, transparent 60%, #55a576 90%), url("/assets/fundo.jpg");
+    background-size: cover;
+    background-repeat: no-repeat;
+    background-position: center bottom;
+}
+input {
+    background-image: linear-gradient(to left , transparent 0%, #f0f2f5 99%), url("/assets/img-whats-cinza.jpg");
+    background-size: cover;
+    background-repeat: no-repeat;
+    background-position: top left;
+}
+.btn-1 {
+    background: url("/assets/fundo-preto.avif");
+    background-size: cover;
+    background-repeat: no-repeat;
+    background-position: top left;
+}
+.bg-whats {
+    background-color: #55a576;
+}
+.border-bottom-whats {
+    border-color: #fff !important;
+}
+.color-whats {
+    color: #55a576;
+}
+.h-15 {
+    height: 15% !important;
+}
+.h-85 {
+    height: 85% !important;
+}
+.img-loading {
+    width: 35% !important;
+    height: 30% !important;
+}
+.container-img {
+    margin-top: 50px !important;
+}
+.conteudo {
+    width: 50% !important;
+}
+@media screen and (max-width: 780px) {
+    .conteudo {
+        width: 100% !important;
+    }
+}

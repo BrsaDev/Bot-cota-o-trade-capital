@@ -1,0 +1,114 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.2.3/dist/css/bootstrap.min.css" rel="stylesheet"
+        integrity="sha384-rbsA2VBKQhggwzxH7pPCaAqO46MgnOM80zW1RWuH61DGLwZJEdK2Kadq2F9CUG65" crossorigin="anonymous">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css"
+        integrity="sha512-1ycn6IcaQQ40/MKBW2W4Rhis/DbILU74C1vSrLJxCq57o941Ym01SwNsOMqvEBFlcgUa6xLiPY/NS5R+E6ztJQ=="
+        crossorigin="anonymous" referrerpolicy="no-referrer" />
+    <script src="https://unpkg.com/axios@1.1.2/dist/axios.min.js"></script>
+    <link rel="stylesheet" href="./css/home.css">
+    <title>BotCotação</title>
+</head>
+
+<body class="body">
+    <div class="row h-100">
+        <div class="col-12 fs-1 border-bottom-whats border border-2 border-top-0 border-end-0 border-start-0 text-white text-center h-15 d-flex justify-content-center align-items-center">
+            <span class="text-white">Tela de autenticação via QR-code</span>
+        </div>
+        <div class="col-12 h-85 d-flex justify-content-center align-items-start">
+            <div class="row p-5 conteudo">
+                <div class="col-12">
+                    <div class="mb-1">
+                        <span class="fw-bold fs-5">Status: </span>
+                        <span class="fw-bold fs-5" id="status-conexao">Desconectado</span>
+                    </div>
+                    <div>
+                        <input autofocus type="text" class="shadow-lg fw-bold form-control form-control-sm mb-2" id="numero-whatsapp"
+                            placeholder="Digite um apelido para a conexão.">
+                        <button id="btn-conectar" class="fw-bold shadow-lg btn btn-success btn-sm w-100 mb-2 btn-1">Conectar</button>
+                        <button id="btn-desconectar" disabled class="fw-bold shadow-lg btn btn-warning btn-sm w-100">Desconectar</button>
+                    </div>
+                    <div class="d-flex justify-content-center align-items-center container-img">
+                        <img id="img-loading" class="d-none img-loading" src="./assets/loading.gif" alt="loading...">
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <script>
+        let btnConectar = document.querySelector('#btn-conectar')
+        let btnDesconectar = document.querySelector('#btn-desconectar')
+        let imgLoading = document.querySelector('#img-loading')
+        let statusConexao = document.querySelector('#status-conexao')
+        let numeroWhatsapp = document.querySelector('#numero-whatsapp')
+        let idClient = localStorage.getItem('idClient')
+        let baseUrl = "http://localhost:3000"
+
+        async function checkUserConect() {
+            if ( idClient || idClient != "" ) {
+              let response = await axios.post(baseUrl+'/check-user-conect', {idCliente: idClient})
+              if ( response.data.status == "connected" ) {
+                statusConexao.innerText = "Conectado com: " + idClient
+                imgLoading.src = "./assets/loading.gif"
+                imgLoading.classList.add('d-none')
+                btnConectar.disabled = true
+                numeroWhatsapp.disabled = true
+                numeroWhatsapp.value = ""
+                btnDesconectar.disabled = false
+                localStorage.setItem('idClient', idClient)
+              }
+            }
+            
+        }
+        setInterval(checkUserConect, 5000)
+        
+
+        btnConectar.addEventListener('click', async function() {
+            if ( numeroWhatsapp.value != "" ) {
+                imgLoading.classList.remove('d-none')
+                let response = await axios.post(baseUrl+"/iniciar-sessao", {idCliente: numeroWhatsapp.value})
+                if ( response.data.status == "OK" ) {
+                   await getQrcode(numeroWhatsapp.value)
+                }
+            }
+        })
+
+        async function getQrcode(numero) {
+            let interval = setInterval(async ()=>{
+                let response = await axios.get(baseUrl+"/qr-code?idCliente="+numero)
+                if ( response.data.nome_qrcode ) { imgLoading.src = `/assets/${ response.data.nome_qrcode }` }
+                if ( response.data.autenticado ) {
+                    statusConexao.innerText = "Conectado com: " + numero
+                    imgLoading.src = "./assets/loading.gif"
+                    imgLoading.classList.add('d-none')
+                    btnConectar.disabled = true
+                    numeroWhatsapp.disabled = true
+                    numeroWhatsapp.value = ""
+                    btnDesconectar.disabled = false
+                    localStorage.setItem('idClient', numero)
+                    clearInterval(interval)
+                }
+            },13000)
+            
+        }
+
+        btnDesconectar.addEventListener('click', async function() {
+            let confirmar = confirm("Deseja realmente desconectar?")
+            if ( confirmar ) {
+                localStorage.setItem('idClient', "")
+                await axios.post(baseUrl+"/fechar-sessao", {idCliente: idClient})
+                statusConexao.innerText = "Desconectado"
+                btnConectar.disabled = false
+                numeroWhatsapp.disabled = false
+                btnDesconectar.disabled = true
+            }
+        })
+    </script>
+</body>
+
+</html>
