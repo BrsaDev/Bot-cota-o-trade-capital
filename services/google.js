@@ -35,9 +35,19 @@ module.exports = {
     google_cancelar_transacao: async (numeroTransacao) => {
         try {
             let response = await axios.get(`https://script.google.com/macros/s/AKfycbzad9BjynbV28up5XEmunBrNj5Ekh-XDJjJNTuVc0XojfO-J0AsQJPBFSh7h0p9JBtZBw/exec?cancel=${numeroTransacao}`)
-            console.log(response.data)
             if ( response.data.cancelou == "SIM" ) {
                 return { cancelou: response.data.cancelou, erro: false }
+            }
+            return { erro: true }
+        }catch(erro) {
+            return { erro }
+        }
+    },
+    google_info_conta_banco: async () => {
+        try {
+            let response = await axios.get("https://script.google.com/macros/s/AKfycbz0dMKEr0OvNl0P3CdYQV0Yew0E2etA_jquJjLohwedzP9xHHgFbCb20BVCUf2QGQ3H/exec?conta_banco=sim")
+            if ( Object.keys(response.data.conta_banco).length > 0 ) {
+                return { conta_banco: response.data.conta_banco, erro: false }
             }
             return { erro: true }
         }catch(erro) {

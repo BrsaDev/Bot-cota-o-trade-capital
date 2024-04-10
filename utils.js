@@ -1,11 +1,11 @@
 const fs = require("fs")
 const { 
     google_infos_clientes, google_include_cliente, 
-    google_salvar_transacao, google_cancelar_transacao 
+    google_salvar_transacao, google_cancelar_transacao, google_info_conta_banco
 } = require("./services/google")
 const { get_cotas_usdt } = require("./services/traceCapital")
+var { infoClientesTemp } = require("./conexaoClienteCache")
 
-var infoClientesTemp = null
 var interval = null
 module.exports = {
     deletarArquivo: (path) => {
@@ -40,12 +40,13 @@ module.exports = {
         }
         if ( typeof infoClientesTemp[id_grupo] != 'undefined' && infoClientesTemp[id_grupo].numero_comandos.includes(msg.author) ) {
             if ( msg.body == "/ref" ) {
+                let taxa = infoClientesTemp[id_grupo].taxa
                 let countInterval = 1
                 interval = setInterval(async () => {
-                  let cota = await get_cotas_usdt()
+                    let cota = await get_cotas_usdt()
                     if ( countInterval >= 5 ) clearInterval(interval)
                     if ( !cota.erro ) {
-                        client.sendMessage(id_grupo, `VALOR USDT = R$${cota.cota}`)
+                        client.sendMessage(id_grupo, `VALOR USDT = R$${parseFloat(cota.cota + taxa).toFixed(4).toString().replace('.', ',')}`)
                     }else {
                         client.sendMessage(id_grupo, "A api está com instabilidade no momento.")
                         clearInterval(interval)
@@ -65,20 +66,18 @@ module.exports = {
                     let hora = dataHora[1]
                     let msgBodySplit = msg.body.split(' ')
                     let qtdeTotal = parseInt(msgBodySplit[1].replace('k', '')) * 1000
-                    console.log('cota taxa =>', taxa, msgBodySplit[3])
-                    let cota_taxa = parseFloat(msgBodySplit[3].replace(',', '.')) + taxa
+                    console.log('cota taxa =>', taxa, msgBodySplit[3], parseFloat(msgBodySplit[3].replace(',', '.')).toFixed(4))
+                    let cota_taxa = parseFloat(parseFloat(msgBodySplit[3].replace(',', '.')).toFixed(4) + taxa).toFixed(4)
                     let venda =  cota_taxa * qtdeTotal
                     client.sendMessage(id_grupo, `_Detalhes da Operação_:
 
 📅 *Data da Operação:* ${data}
 *Hora:* ${hora}
 
-*Cotação:* 1 USDT = R$ ${cota_taxa.toFixed(4).toString().replace('.', ',')} BRL
+*Cotação:* 1 USDT = R$ ${(cota_taxa).toString().replace('.', ',')} BRL
 
-💵 *Montante em USDT:*
-*Quantidade Total:* ${formatarValor(qtdeTotal)}
-💼 *Montante em BRL:* R$${formatarValor(venda, true)}
-                    `)
+💵 *Montante em USDT:* ${formatarValor(qtdeTotal)}
+💼 *Montante em BRL:* R$${formatarValor(venda, true)}`)
                     let cliente = infoClientesTemp[id_grupo].nome_grupo
                     let fluxo = msgBodySplit[4]
                     let res = await google_salvar_transacao({
@@ -105,14 +104,31 @@ module.exports = {
                     msg.reply("Houve um problema ao cancelar a transação.")
                 }
             }
+            else if ( msg.body == "/att" ) {
+                let info = await google_infos_clientes() 
+                if ( !info.erro ) {
+                    infoClientesTemp = info.data
+                    msg.reply("Atualização dos dados da planilha feito com sucesso.")
+                }else { msg.reply("Houve um erro ao atualizar os dados da planilha no bot") }
+            }
+            else if ( msg.body == "/banco" ) {
+                let resultado = await google_info_conta_banco()
+                if ( !resultado.erro  ) {
+                    client.sendMessage(id_grupo, `*Banco:* ${ resultado.conta_banco.nome }
+*Ag:* ${ resultado.conta_banco.agencia }
+*Conta Corrente:* ${ resultado.conta_banco.conta_corrente }
+*CNPJ:* ${ resultado.conta_banco.cnpj }
+*Pix:* ${ resultado.conta_banco.chave_pix }`)
+                }
+            }
         }
     }
 }
 
 function operacao(msg) {
-    if ( msg.body.includes("D0") ) return true
-    if ( msg.body.includes("D1") ) return true
-    if ( msg.body.includes("D2") ) return true
+    if ( msg.body.includes("D0") || msg.body.includes("d0") ) return true
+    if ( msg.body.includes("D1") || msg.body.includes("d1") ) return true
+    if ( msg.body.includes("D2") || msg.body.includes("d2") ) return true
     return false
 }
 function formatarValor(valor, depoisVirgula=false) {

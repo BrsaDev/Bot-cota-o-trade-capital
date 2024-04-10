@@ -2,7 +2,7 @@ const express = require('express')
 const fs = require('fs')
 const path = require('path')
 const session = require('./whatsapp')
-let { conexaoClientes } = require('./conexaoClienteCache')
+let { conexaoClientes, infoClientesTemp } = require('./conexaoClienteCache')
 const { deletarArquivo } = require('./utils')
 
 
@@ -53,14 +53,19 @@ try {
     })
 
     app.post('/fechar-sessao', async (req, res) => {
-        let { idCliente } = req.body
+        let { idCliente, init } = req.body
         let config = JSON.parse(fs.readFileSync(path.join(__dirname, '/config.json')))
         if ( typeof config[idCliente] != 'undefined' ) {
             config[idCliente].autenticado = false
             fs.writeFileSync(path.join(__dirname, '/config.json'), JSON.stringify(config)) 
+        }        
+        if ( typeof conexaoClientes[idCliente] != 'undefined' ) {
             await conexaoClientes[idCliente].logout()
             delete conexaoClientes[idCliente]
-        }        
+        }
+        if ( !init ) {
+            infoClientesTemp = null
+        }
         return res.json({ status: 'OK' })
     })
 
