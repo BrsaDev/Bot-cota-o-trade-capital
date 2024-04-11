@@ -58,7 +58,7 @@ module.exports = {
                     if ( !cota.erro ) {
                         client.sendMessage(id_grupo, `VALOR USDT = R$${parseFloat(cota.cota + taxa).toFixed(4).toString().replace('.', ',')}`)
                     }else {
-                        client.sendMessage(id_grupo, "A api está com instabilidade no momento.")
+                        msg.reply(id_grupo, "A api está com instabilidade no momento.")
                         clearInterval(interval)
                     }
                     countInterval++
@@ -68,17 +68,17 @@ module.exports = {
                 clearInterval(interval)
             }
             else if ( msg.body.includes("/order") && msg.body[0] == "/" && msg.body.split(" ").length == 5 && msg.body.includes(" fx ") && operacao(msg) ) {
-                let cota = await get_cotas_usdt()
-                if ( !cota.erro ) {
-                    let taxa = infoClientesTemp[id_grupo].taxa
-                    let dataHora = new Date().toLocaleString('pt-BR').substr(0, 20).split('-').reverse().join('/').split(', ')
-                    let data = dataHora[0]
-                    let hora = dataHora[1]
-                    let msgBodySplit = msg.body.split(' ')
-                    let qtdeTotal = parseInt(msgBodySplit[1].replace('k', '')) * 1000
-                    let cota_taxa = parseFloat(parseFloat(msgBodySplit[3].replace(',', '.')).toFixed(4) + taxa).toFixed(4)
-                    let venda =  cota_taxa * qtdeTotal
-                    client.sendMessage(id_grupo, `_Detalhes da Operação_:
+                let msgBodySplit = msg.body.split(' ')
+                let taxaFixaOperacao = parseFloat(( 0.5067 * parseFloat(msgBodySplit[3].replace(',', '.')).toFixed(4) ) / 100)
+                let cotaMenosTaxaFixa = parseFloat( parseFloat(msgBodySplit[3].replace(',', '.') ).toFixed(4) - taxaFixaOperacao ).toFixed(4)
+                let taxa = parseFloat( ( infoClientesTemp[id_grupo].taxa * cotaMenosTaxaFixa ) / 100 ).toFixed(4)
+                let dataHora = new Date().toLocaleString('pt-BR').substr(0, 20).split('-').reverse().join('/').split(', ')
+                let data = dataHora[0]
+                let hora = dataHora[1]
+                let qtdeTotal = parseInt(msgBodySplit[1].replace('k', '')) * 1000
+                let cota_taxa = parseFloat( parseFloat(cotaMenosTaxaFixa) + parseFloat(taxa) ).toFixed(4)
+                let venda =  cota_taxa * qtdeTotal
+                client.sendMessage(id_grupo, `_Detalhes da Operação_:
 
 📅 *Data da Operação:* ${data}
 *Hora:* ${hora}
@@ -87,21 +87,20 @@ module.exports = {
 
 💵 *Montante em USDT:* ${formatarValor(qtdeTotal)}
 💼 *Montante em BRL:* R$${formatarValor(venda, true)}`)
-                    let cliente = infoClientesTemp[id_grupo].nome_grupo
-                    let fluxo = msgBodySplit[4]
-                    let res = await google_salvar_transacao({
-                        data,
-                        hora,
-                        cliente,
-                        fluxo,
-                        usdt: msgBodySplit[1].replace('k', ''),
-                        venda: cota_taxa.toString().replace('.', ',')
-                    })
-                    if ( !res.erro ) {
-                        msg.reply(`Numero da transação = ${ res.ultimoRegistro }`)
-                    }else {
-                        msg.reply(`Erro ao salvar a transação no banco de dados.`)
-                    }
+                let cliente = infoClientesTemp[id_grupo].nome_grupo
+                let fluxo = msgBodySplit[4]
+                let res = await google_salvar_transacao({
+                    data,
+                    hora,
+                    cliente,
+                    fluxo,
+                    usdt: msgBodySplit[1].replace('k', ''),
+                    venda: cota_taxa.toString().replace('.', ',')
+                })
+                if ( !res.erro ) {
+                    msg.reply(`Numero da transação = ${ res.ultimoRegistro }`)
+                }else {
+                    msg.reply(`Erro ao salvar a transação no banco de dados.`)
                 }
             }
             else if ( msg.body.includes("/cancel") ) {
@@ -135,6 +134,7 @@ module.exports = {
                 let helpSplit = msg.body.split(" ")
                 if ( helpSplit.length == 2 ) var comandos = todosComandos(helpSplit[1])
                 else var comandos = todosComandos()
+                if ( !comandos ) return msg.reply("Não existe comando com esse número.")
                 client.sendMessage(msg.author, comandos)
                 msg.reply("comandos enviado no privado.")
             } 
@@ -186,6 +186,7 @@ function todosComandos(id=false) {
 *composição do comando:* /help + espaço + numero do comando
 *exemplo:* /help 1`
     }
+    if ( id && id > Object.keys(comandos).length ) return false
     if ( id ) return comandos[id]
     let ultimoItem = `[${ Object.keys(comandos).length }]`
     let listaComandos = ""
