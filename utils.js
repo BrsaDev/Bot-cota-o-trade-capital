@@ -26,6 +26,16 @@ module.exports = {
         // verifica de a mensagem está vindo de um grupo, senão para por aqui mesmo
         if ( !id_grupo.includes("@g.us") ) { return true }
 
+        // comando para habilitar algum numero que foi inserido e não tinha acesso
+        if ( msg.body == "/lpu" ) {
+            let resp = await google_infos_clientes() 
+            if ( !resp.erro ) {
+                infoClientesTemp = resp.data
+                return msg.reply("Liberação para usar comandos feita com sucesso.")
+            }
+            return msg.reply("Houve um erro ao liberar o uso dos comandos.")
+        }
+
         // inclui novo grupo na planilha e busca os dados do cliente para atualizar na variável cache => [infoClientesTemp]
         if ( msg.body.includes('/include') ) {
             let taxa = msg.body.split(" ")[1]
@@ -66,7 +76,6 @@ module.exports = {
                     let hora = dataHora[1]
                     let msgBodySplit = msg.body.split(' ')
                     let qtdeTotal = parseInt(msgBodySplit[1].replace('k', '')) * 1000
-                    console.log('cota taxa =>', taxa, msgBodySplit[3], parseFloat(msgBodySplit[3].replace(',', '.')).toFixed(4))
                     let cota_taxa = parseFloat(parseFloat(msgBodySplit[3].replace(',', '.')).toFixed(4) + taxa).toFixed(4)
                     let venda =  cota_taxa * qtdeTotal
                     client.sendMessage(id_grupo, `_Detalhes da Operação_:
@@ -111,16 +120,24 @@ module.exports = {
                     msg.reply("Atualização dos dados da planilha feito com sucesso.")
                 }else { msg.reply("Houve um erro ao atualizar os dados da planilha no bot") }
             }
-            else if ( msg.body == "/banco" ) {
-                let resultado = await google_info_conta_banco()
+            else if ( msg.body.includes("/banco") ) {
+                let resultado = await google_info_conta_banco(msg.body.split(' ')[1].trim())
                 if ( !resultado.erro  ) {
-                    client.sendMessage(id_grupo, `*Banco:* ${ resultado.conta_banco.nome }
+                    client.sendMessage(id_grupo, `*Banco:* ${ resultado.conta_banco.nome_banco }
 *Ag:* ${ resultado.conta_banco.agencia }
 *Conta Corrente:* ${ resultado.conta_banco.conta_corrente }
+*EMPRESA:* ${ resultado.conta_banco.nome_empresa }
 *CNPJ:* ${ resultado.conta_banco.cnpj }
 *Pix:* ${ resultado.conta_banco.chave_pix }`)
                 }
             }
+            else if ( msg.body.includes("/help") ) {
+                let helpSplit = msg.body.split(" ")
+                if ( helpSplit.length == 2 ) var comandos = todosComandos(helpSplit[1])
+                else var comandos = todosComandos()
+                client.sendMessage(msg.author, comandos)
+                msg.reply("comandos enviado no privado.")
+            } 
         }
     }
 }
@@ -136,3 +153,48 @@ function formatarValor(valor, depoisVirgula=false) {
     else var minimumFractionDigits = 0
     return valor.toLocaleString('pt-BR', { minimumFractionDigits });
 }
+function todosComandos(id=false) {
+    let comandos = {
+        "1": `*[1]* Incluir um novo grupo na planilha para liberação dos comandos
+*composição do comando:* /include + 1 espaço + taxa do cliente
+*exemplo:* /include 0,90`,
+        "2": `*[2]* Excluir transação gravada na planilha
+*composição do comando:* /cancel + 1 espaço + número da transação
+*exemplo:* /cancel 123`,
+        "3": `*[3]* Buscar cota e entregar informação com no máximo 5 recebimentos de cota
+*composição do comando:* /ref
+*exemplo:* /ref`,
+        "4": `*[4]* Parar loop da buscar de cota
+*composição do comando:* .
+*exemplo:* .`,
+        "5": `*[5]* Gerar a venda
+*composição do comando:* /order + espaço + qtde pedida + espaço + fx + espaço + cota + espaço + operação
+*exemplo:* /order 10k fx 5,0329 D0`,
+        "6": `*[6]* Liberar primeiro uso de numero que foi inserido para enviar comandos ao bot
+*composição do comando:* /lpu
+*exemplo:* /lpu`,
+        "7": `*[7]* Atualizar dados dos grupos em cache que eventualmente tiveram mudanças
+*composição do comando:* /att
+*exemplo:* /att`,
+        "8": `*[8]* Buscar dados bancários
+*composição do comando:* /banco + espaço + id do banco
+*exemplo:* /banco 123`,
+        '9': `*[9]* Listar todos os comandos disponíveis
+*composição do comando:* /help
+*exemplo:* /help`,
+        "10": `*[10]* Listar comando específico disponível
+*composição do comando:* /help + espaço + numero do comando
+*exemplo:* /help 1`
+    }
+    if ( id ) return comandos[id]
+    let ultimoItem = `[${ Object.keys(comandos).length }]`
+    let listaComandos = ""
+    for ( let comando of Object.values(comandos) ) {
+        if ( comando.includes(ultimoItem) ) {
+            listaComandos += comando
+        }else listaComandos += (comando + '\n\n')
+    }
+    return listaComandos
+}
+
+

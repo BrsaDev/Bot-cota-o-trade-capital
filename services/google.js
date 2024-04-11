@@ -43,9 +43,9 @@ module.exports = {
             return { erro }
         }
     },
-    google_info_conta_banco: async () => {
+    google_info_conta_banco: async (id_banco) => {
         try {
-            let response = await axios.get("https://script.google.com/macros/s/AKfycbz0dMKEr0OvNl0P3CdYQV0Yew0E2etA_jquJjLohwedzP9xHHgFbCb20BVCUf2QGQ3H/exec?conta_banco=sim")
+            let response = await axios.get("https://script.google.com/macros/s/AKfycbz0dMKEr0OvNl0P3CdYQV0Yew0E2etA_jquJjLohwedzP9xHHgFbCb20BVCUf2QGQ3H/exec?id_banco="+id_banco)
             if ( Object.keys(response.data.conta_banco).length > 0 ) {
                 return { conta_banco: response.data.conta_banco, erro: false }
             }
