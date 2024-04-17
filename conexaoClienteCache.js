@@ -1,4 +1,5 @@
 module.exports = {
     conexaoClientes: {},
-    infoClientesTemp: null
+    infoClientesTemp: null,
+    msgOff: {}
 }

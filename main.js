@@ -103,10 +103,29 @@ try {
 }
 
 
-
-// var { get_cotas_usdt } = require('./services/traceCapital')
-// async function e(){
-//     let cota = await get_cotas_usdt()
-//     console.log(cota)
+// function es() {
+//     let rrr = '12.300'
+//     if ( rrr.includes('k') || rrr.includes('K') ) {
+//         var qtdeTotal = formatarValor(parseFloat(rrr.replace('k', '').replace('K', '')) * 1000, true)
+//         var usdtPlanilha = qtdeTotal
+//     }else {
+//         var qtdeTotal = rrr
+//         if ( qtdeTotal.includes(',') ) {
+//             qtdeTotal = qtdeTotal
+//         }else {
+//             qtdeTotal = parseFloat(qtdeTotal.toString().replace('.', ''))
+//         }
+//         var usdtPlanilha = formatarValor(qtdeTotal, true)
+//     }
+//     let r = formatarValor(qtdeTotal, true)
+//     let cota = parseFloat( parseFloat('5,0805'.replace(',', '.')) ).toFixed(4)
+//     let venda =  formatarValor(parseFloat(cota * parseFloat(qtdeTotal.toString().replace('.', ''))), true)
+//     // venda = formatarValor(venda, true)
+//     console.log(r, venda, usdtPlanilha, qtdeTotal)
 // }
-// e()
+// es()
+// function formatarValor(valor, depoisVirgula=false) {
+//     if ( depoisVirgula ) var minimumFractionDigits = 2
+//     else var minimumFractionDigits = 0
+//     return valor.toLocaleString('pt-BR', { minimumFractionDigits });
+// }

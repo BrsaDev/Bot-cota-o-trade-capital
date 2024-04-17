@@ -23,7 +23,7 @@ module.exports = {
     },
     google_salvar_transacao: async (dadosTransacao) => {
         try {
-            let response = await axios.get(`https://script.google.com/macros/s/AKfycbzad9BjynbV28up5XEmunBrNj5Ekh-XDJjJNTuVc0XojfO-J0AsQJPBFSh7h0p9JBtZBw/exec?data=${dadosTransacao.data}&hora=${dadosTransacao.hora}&cliente=${dadosTransacao.cliente}&fluxo=${dadosTransacao.fluxo}&usdt=${dadosTransacao.usdt}&venda=${dadosTransacao.venda}`)
+            let response = await axios.get(`https://script.google.com/macros/s/AKfycbzad9BjynbV28up5XEmunBrNj5Ekh-XDJjJNTuVc0XojfO-J0AsQJPBFSh7h0p9JBtZBw/exec?data=${dadosTransacao.data}&hora=${dadosTransacao.hora}&cliente=${dadosTransacao.cliente}&fluxo=${dadosTransacao.fluxo}&usdt=${dadosTransacao.usdt}&venda=${dadosTransacao.venda}&id_operacao=${dadosTransacao.id_operacao}`)
             if ( response.data.ultimoRegistro ) {
                 return { ultimoRegistro: response.data.ultimoRegistro, erro: false }
             }
